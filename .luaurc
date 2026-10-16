@@ -1,0 +1,6 @@
+{
+    "aliases": {
+        "sonata": ".sonata/types/libs",
+        "httpx": ".sonata/deps/httpx"
+    }
+}
