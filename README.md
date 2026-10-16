@@ -2,6 +2,8 @@
 
 A Discord bot framework for [Sonata](https://sonata.5418.org).
 
+Docs are available at https://loopy5418.github.io/discord-docs !
+
 ```sh
 sn pkg add github.com/loopy5418/discord
 ```
