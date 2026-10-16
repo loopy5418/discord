@@ -14,6 +14,7 @@ local crypto = require("@sonata/crypto")
 local datetime = require("@sonata/datetime")
 
 local codes = require("./codes")
+local decodeJson = require("../json").decode
 local Intent = require("./intents")
 
 local API = "https://discord.com/api/v10"
@@ -248,7 +249,7 @@ function Gateway:_connectOnce(url: string, tryResume: boolean): (string, string?
 
 	for message, kind in ws:messages() do
 		if kind == "text" then
-			local ok, payload = pcall(json.decode, message)
+			local ok, payload = pcall(decodeJson, message)
 			if ok and type(payload) == "table" then
 				if self.debug then
 					log("<-", payload.op, if type(payload.t) == "string" then payload.t else "", message)

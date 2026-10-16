@@ -14,6 +14,7 @@ local httpx = require("@httpx")
 local json = require("@sonata/json")
 local task = require("@sonata/task")
 local crypto = require("@sonata/crypto")
+local decodeJson = require("./json").decode
 
 local function hexDecode(hex: string): string?
 	if #hex % 2 ~= 0 or string.find(hex, "[^%x]") then
@@ -49,7 +50,7 @@ return function(bot: any, options: ListenOptions)
 			return 401, "invalid request signature"
 		end
 
-		local ok, interaction = pcall(json.decode, body)
+		local ok, interaction = pcall(decodeJson, body)
 		if not ok or type(interaction) ~= "table" then
 			return 400, "bad json"
 		end

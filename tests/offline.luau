@@ -367,6 +367,24 @@ check("color parse", ui.color("#ff0000") == 0xff0000)
 local disabled = ui.disableAll({ ui.row(ui.button({ label = "x", customId = "x" }), ui.link("y", "https://e.com")) })
 check("disableAll", disabled[1].components[1].disabled == true and disabled[1].components[2].disabled == nil)
 
+-- JSON null handling --------------------------------------------------------------------------
+
+local decodeJson = require("../lib/json").decode
+local app = decodeJson('{"id":"1","team":null,"owner":{"id":"7","avatar":null},"tags":["a",null]}')
+check("null field dropped", app.team == nil and app.owner.id == "7" and app.owner.avatar == nil)
+check("null array entry kept", #app.tags == 2 and app.tags[2] == json.null)
+
+local cache = require("../lib/cache").new()
+cache:putUser({ id = "5", username = "u", avatar = "abc" })
+local held = cache:user("5")
+cache:putUser(decodeJson('{"id":"5","username":"u","avatar":null}'))
+check("cleared user field", held.avatar == nil and cache:user("5") == held)
+
+cache:handle("GUILD_CREATE", { id = "g9", name = "g", icon = "i", member_count = 3, channels = {} })
+cache:handle("GUILD_UPDATE", decodeJson('{"id":"g9","name":"g2","icon":null}'))
+local g9 = cache:guild("g9")
+check("guild update", g9.name == "g2" and g9.icon == nil and g9.member_count == 3, g9)
+
 -- HTTP signature check works with the runtime's ed25519 ---------------------------------------
 
 local public, private = crypto.keypair("ed25519")

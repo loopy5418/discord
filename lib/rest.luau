@@ -12,6 +12,7 @@ local httpx = require("@httpx")
 local json = require("@sonata/json")
 local task = require("@sonata/task")
 local datetime = require("@sonata/datetime")
+local stripNull = require("./json").stripNull
 
 local API = "https://discord.com/api/v10"
 local USER_AGENT = "DiscordBot (https://github.com/loopy5418/discord, 0.1.0)"
@@ -213,7 +214,7 @@ function Rest:request(method: string, route: string, options: RequestOptions?): 
 		end
 
 		if res.status == 429 then
-			local data = res:json() or {}
+			local data = stripNull(res:json()) or {}
 			local retryAfter = tonumber(data.retry_after) or tonumber(res.headers["retry-after"]) or 1
 			if data.global or res.headers["x-ratelimit-global"] then
 				self._globalUntil = datetime.monotonic() + retryAfter
@@ -234,13 +235,13 @@ function Rest:request(method: string, route: string, options: RequestOptions?): 
 			if res.status == 204 or res.body == nil or res.body == "" then
 				result = true
 			else
-				result = res:json()
+				result = stripNull(res:json())
 				if result == nil then
 					result = true
 				end
 			end
 		else
-			local data = res:json()
+			local data = stripNull(res:json())
 			local fields = { method = method, route = route, status = res.status }
 			if type(data) == "table" then
 				fields.code = data.code

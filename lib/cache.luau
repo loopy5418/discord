@@ -53,6 +53,8 @@ function Cache:putUser(user: any)
 	if user and user.id then
 		local existing = self.users[user.id]
 		if existing then
+			-- replace in place so held references stay live; absent fields were null
+			table.clear(existing)
 			for k, v in user do
 				existing[k] = v
 			end
@@ -106,6 +108,16 @@ local function upsertRole(guild: any, role: any)
 	table.insert(guild.roles, role)
 end
 
+-- guild fields Discord sends in GUILD_CREATE but not in GUILD_UPDATE
+local CREATE_ONLY = {
+	joined_at = true,
+	large = true,
+	member_count = true,
+	stage_instances = true,
+	guild_scheduled_events = true,
+	soundboard_sounds = true,
+}
+
 -- applies a gateway dispatch
 function Cache:handle(event: string, d: any)
 	if not self.enabled or type(d) ~= "table" then
@@ -116,6 +128,12 @@ function Cache:handle(event: string, d: any)
 			return
 		end
 		local guild = self.guilds[d.id] or {}
+		-- a field missing from the update was nulled, unless it only ever comes with GUILD_CREATE
+		for k in guild do
+			if d[k] == nil and not CREATE_ONLY[k] then
+				guild[k] = nil
+			end
+		end
 		for k, v in d do
 			if k ~= "channels" and k ~= "threads" and k ~= "members" and k ~= "presences" and k ~= "voice_states" then
 				guild[k] = v
